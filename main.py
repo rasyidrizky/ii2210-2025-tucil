@@ -3,6 +3,7 @@ import base64
 import pyotp
 from fastapi import FastAPI, Depends, HTTPException, status
 from fastapi.security import HTTPBasic, HTTPBasicCredentials
+from fastapi.responses import HTMLResponse
 from sqlmodel import create_engine, Session, SQLModel, select
 from typing import Annotated
 from model import MOTD, MOTDBase
@@ -30,13 +31,13 @@ users = {
     "rasyid": "ii2210_rasyid"
 }
 
-@app.get("/")
+@app.get("/", response_class=HTMLResponse)
 async def root():
     # Silahkan lengkapi dengan kode untuk memberikan index.html
     try:
         with open("index.html", "r") as file:
-            content = file.read()
-        return content
+            html_content = file.read()
+        return HTMLResponse(content=html_content, status_code=200)
     except FileNotFoundError:
         raise HTTPException(status_code=404, detail="index.html not found")
 
@@ -65,7 +66,7 @@ async def post_motd(message: MOTDBase, session: SessionDep, credentials: Annotat
 
             if valid_password and valid_username:
                 # Silahkan lengkapi dengan kode untuk menambahkan message of the day ke basis data
-                new_motd = MOTD(message=message.message)
+                new_motd = MOTD(motd=message.motd, creator=credentials.username)
                 session.add(new_motd)
                 session.commit()
                 session.refresh(new_motd)
